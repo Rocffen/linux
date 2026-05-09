@@ -1,0 +1,2597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Linux命令学习助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            color: #00d9ff;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        .search-bar {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #00d9ff;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .search-bar:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+        }
+        
+        .search-bar::placeholder {
+            color: #666;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-color: #00d9ff;
+            color: #000;
+        }
+        
+        .tab:hover {
+            background: rgba(0, 217, 255, 0.3);
+        }
+        
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .command-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .command-card:hover {
+            transform: translateY(-3px);
+            border-color: #00d9ff;
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.2);
+        }
+        
+        .command-card .name {
+            font-size: 1.2rem;
+            color: #00d9ff;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .command-card .desc {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        
+        .command-card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .command-card .tag {
+            padding: 3px 8px;
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            display: none;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #1a1a2e;
+            border: 1px solid #00d9ff;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header .title {
+            font-size: 1.5rem;
+            color: #00d9ff;
+        }
+        
+        .close-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.2);
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+            color: #00ff88;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .section-title::before {
+            content: '▸';
+            color: #00d9ff;
+        }
+        
+        .usage {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #ddd;
+            line-height: 1.6;
+        }
+        
+        .example {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        
+        .example .prompt {
+            color: #00d9ff;
+        }
+        
+        .example .command {
+            color: #fff;
+        }
+        
+        .example .output {
+            color: #00ff88;
+            margin-top: 5px;
+        }
+        
+        .quiz-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .quiz-question {
+            font-size: 1rem;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quiz-option {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .quiz-option:hover {
+            background: rgba(0, 217, 255, 0.2);
+            border-color: rgba(0, 217, 255, 0.5);
+        }
+        
+        .quiz-option.correct {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        
+        .quiz-option.wrong {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .quiz-feedback.correct {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            display: block;
+        }
+        
+        .quiz-feedback.wrong {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff4444;
+            display: block;
+        }
+        
+        .favorite-btn {
+            position: absolute;
+            top: 20px;
+            right: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .favorite-btn:hover {
+            transform: scale(1.2);
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: rgba(0, 217, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            color: #00d9ff;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        
+        @media (max-width: 768px) {
+            .command-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐧 Linux命令学习助手</h1>
+            <p>掌握常用运维命令，成为Linux高手！</p>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalCommands">0</div>
+                <div class="stat-label">命令总数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="favCount">0</div>
+                <div class="stat-label">收藏数量</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="quizScore">0</div>
+                <div class="stat-label">测验得分</div>
+            </div>
+        </div>
+        
+        <input type="text" class="search-bar" id="searchBar" placeholder="搜索命令...">
+        
+        <div class="tabs" id="categoryTabs">
+            <div class="tab active" data-category="all">全部</div>
+            <div class="tab" data-category="files">文件操作</div>
+            <div class="tab" data-category="system">系统管理</div>
+            <div class="tab" data-category="network">网络管理</div>
+            <div class="tab" data-category="process">进程管理</div>
+            <div class="tab" data-category="package">软件包管理</div>
+            <div class="tab" data-category="script">脚本编程</div>
+            <div class="tab" data-category="tools">工具命令</div>
+            <div class="tab" data-category="compress">压缩工具</div>
+        </div>
+        
+        <div class="command-grid" id="commandGrid"></div>
+        
+        <div class="modal" id="commandModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="title" id="modalTitle"></span>
+                    <span class="favorite-btn" id="favoriteBtn" onclick="toggleFavorite()">⭐</span>
+                    <button class="close-btn" onclick="closeModal()">✕</button>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const commands = [
+            {
+                name: 'ls',
+                description: '列出目录内容',
+                category: 'files',
+                usage: 'ls [选项] [目录]',
+                details: '列出指定目录下的文件和文件夹。如果没有指定目录，则列出当前目录。',
+                examples: [
+                    { command: 'ls', output: '列出当前目录内容' },
+                    { command: 'ls -l', output: '以长格式显示，包含权限、所有者、大小等信息' },
+                    { command: 'ls -la', output: '显示所有文件，包括隐藏文件(以.开头的文件)' },
+                    { command: 'ls -lh', output: '以人类可读的格式显示文件大小' }
+                ],
+                quiz: {
+                    question: '要查看目录中所有文件（包括隐藏文件），应该使用哪个命令？',
+                    options: ['ls -a', 'ls -l', 'ls -h', 'ls -r'],
+                    answer: 0,
+                    explanation: '-a 参数表示显示所有文件，包括以点(.)开头的隐藏文件'
+                }
+            },
+            {
+                name: 'cd',
+                description: '切换当前目录',
+                category: 'files',
+                usage: 'cd [目录路径]',
+                details: '改变当前工作目录到指定路径。使用 cd ~ 或 cd 可回到用户主目录。',
+                examples: [
+                    { command: 'cd /home/user', output: '切换到/home/user目录' },
+                    { command: 'cd ..', output: '切换到上级目录' },
+                    { command: 'cd ~', output: '切换到用户主目录' },
+                    { command: 'cd -', output: '切换到上一次所在的目录' }
+                ],
+                quiz: {
+                    question: '如何快速回到用户主目录？',
+                    options: ['cd /', 'cd ~', 'cd home', 'cd .'],
+                    answer: 1,
+                    explanation: '~ 是用户主目录的快捷表示法'
+                }
+            },
+            {
+                name: 'cp',
+                description: '复制文件或目录',
+                category: 'files',
+                usage: 'cp [选项] 源文件 目标文件',
+                details: '将源文件复制到目标位置。使用 -r 参数可以递归复制目录。',
+                examples: [
+                    { command: 'cp file.txt backup.txt', output: '复制file.txt为backup.txt' },
+                    { command: 'cp -r dir1 dir2', output: '递归复制dir1目录到dir2' },
+                    { command: 'cp -i file.txt backup.txt', output: '复制前询问确认' },
+                    { command: 'cp -v file.txt /tmp/', output: '显示复制过程' }
+                ],
+                quiz: {
+                    question: '要复制整个目录及其内容，需要使用哪个参数？',
+                    options: ['-f', '-r', '-v', '-i'],
+                    answer: 1,
+                    explanation: '-r 参数表示递归复制目录及其所有内容'
+                }
+            },
+            {
+                name: 'mv',
+                description: '移动或重命名文件',
+                category: 'files',
+                usage: 'mv [选项] 源文件 目标文件',
+                details: '将文件移动到新位置，或重命名文件。',
+                examples: [
+                    { command: 'mv old.txt new.txt', output: '将old.txt重命名为new.txt' },
+                    { command: 'mv file.txt /tmp/', output: '将file.txt移动到/tmp目录' },
+                    { command: 'mv -i file.txt backup/', output: '移动前询问确认' }
+                ],
+                quiz: {
+                    question: '以下哪个命令可以将文件重命名？',
+                    options: ['cp', 'rm', 'mv', 'ln'],
+                    answer: 2,
+                    explanation: 'mv命令既可以移动文件，也可以重命名文件'
+                }
+            },
+            {
+                name: 'rm',
+                description: '删除文件或目录',
+                category: 'files',
+                usage: 'rm [选项] 文件',
+                details: '删除指定的文件或目录。使用 -r 参数递归删除目录及其内容。',
+                examples: [
+                    { command: 'rm file.txt', output: '删除file.txt' },
+                    { command: 'rm -r dir/', output: '递归删除dir目录及其内容' },
+                    { command: 'rm -rf dir/', output: '强制递归删除，不询问确认' },
+                    { command: 'rm -i file.txt', output: '删除前询问确认' }
+                ],
+                quiz: {
+                    question: '强制删除目录且不询问确认的命令是？',
+                    options: ['rm dir/', 'rm -r dir/', 'rm -rf dir/', 'rm -i dir/'],
+                    answer: 2,
+                    explanation: '-rf 参数组合表示递归(-r)且强制(-f)删除'
+                }
+            },
+            {
+                name: 'mkdir',
+                description: '创建目录',
+                category: 'files',
+                usage: 'mkdir [选项] 目录名',
+                details: '创建一个新目录。使用 -p 参数可以创建嵌套目录。',
+                examples: [
+                    { command: 'mkdir newdir', output: '创建newdir目录' },
+                    { command: 'mkdir -p dir1/dir2/dir3', output: '递归创建嵌套目录' },
+                    { command: 'mkdir -m 755 newdir', output: '创建目录并设置权限' }
+                ],
+                quiz: {
+                    question: '要创建嵌套目录 /a/b/c，应该使用哪个命令？',
+                    options: ['mkdir /a/b/c', 'mkdir -p /a/b/c', 'mkdir -r /a/b/c', 'mkdir --nested /a/b/c'],
+                    answer: 1,
+                    explanation: '-p 参数可以创建不存在的父目录'
+                }
+            },
+            {
+                name: 'cat',
+                description: '查看文件内容',
+                category: 'files',
+                usage: 'cat [选项] 文件',
+                details: '显示文件内容到标准输出。可用于查看小文件。',
+                examples: [
+                    { command: 'cat file.txt', output: '显示file.txt内容' },
+                    { command: 'cat -n file.txt', output: '显示行号' },
+                    { command: 'cat file1.txt file2.txt', output: '合并显示多个文件' },
+                    { command: 'cat > newfile.txt', output: '创建新文件并输入内容' }
+                ],
+                quiz: {
+                    question: '如何在查看文件时显示行号？',
+                    options: ['cat -l', 'cat -n', 'cat --number', 'cat -p'],
+                    answer: 1,
+                    explanation: '-n 参数可以在每行前面显示行号'
+                }
+            },
+            {
+                name: 'grep',
+                description: '搜索文件内容',
+                category: 'files',
+                usage: 'grep [选项] 模式 文件',
+                details: '在文件中搜索匹配指定模式的行。支持正则表达式。',
+                examples: [
+                    { command: 'grep "pattern" file.txt', output: '搜索包含pattern的行' },
+                    { command: 'grep -i "pattern" file.txt', output: '忽略大小写搜索' },
+                    { command: 'grep -r "pattern" dir/', output: '递归搜索目录' },
+                    { command: 'grep -n "pattern" file.txt', output: '显示匹配行的行号' }
+                ],
+                quiz: {
+                    question: '要忽略大小写进行搜索，应该使用哪个参数？',
+                    options: ['-r', '-i', '-n', '-v'],
+                    answer: 1,
+                    explanation: '-i 参数表示忽略大小写(ignore case)'
+                }
+            },
+            {
+                name: 'chmod',
+                description: '修改文件权限',
+                category: 'system',
+                usage: 'chmod [权限] 文件',
+                details: '修改文件或目录的权限。权限可以用数字(如755)或符号(如u+x)表示。',
+                examples: [
+                    { command: 'chmod 755 file.sh', output: '设置权限为rwxr-xr-x' },
+                    { command: 'chmod +x script.sh', output: '添加可执行权限' },
+                    { command: 'chmod -R 755 dir/', output: '递归修改目录权限' },
+                    { command: 'chmod u=rwx,g=rx,o=r file.txt', output: '符号方式设置权限' }
+                ],
+                quiz: {
+                    question: '数字权限755表示什么？',
+                    options: ['所有人都有全部权限', '所有者rwx，组和其他rx', '所有人只读', '仅所有者有权限'],
+                    answer: 1,
+                    explanation: '7=4+2+1(rwx), 5=4+1(rx), 所以755=rwxr-xr-x'
+                }
+            },
+            {
+                name: 'chown',
+                description: '修改文件所有者',
+                category: 'system',
+                usage: 'chown [所有者:组] 文件',
+                details: '修改文件或目录的所有者和所属组。',
+                examples: [
+                    { command: 'chown user file.txt', output: '将文件所有者改为user' },
+                    { command: 'chown user:group file.txt', output: '同时修改所有者和组' },
+                    { command: 'chown -R user:group dir/', output: '递归修改目录及其内容' }
+                ],
+                quiz: {
+                    question: '如何同时修改文件的所有者和所属组？',
+                    options: ['chown user file', 'chown user.group file', 'chown user:group file', 'chown --user user --group group file'],
+                    answer: 2,
+                    explanation: '使用冒号分隔所有者和组：chown user:group file'
+                }
+            },
+            {
+                name: 'useradd',
+                description: '创建用户',
+                category: 'system',
+                usage: 'useradd [选项] 用户名',
+                details: '创建新的系统用户。通常需要root权限。',
+                examples: [
+                    { command: 'useradd newuser', output: '创建新用户newuser' },
+                    { command: 'useradd -m newuser', output: '创建用户并创建主目录' },
+                    { command: 'useradd -s /bin/bash newuser', output: '指定登录shell' },
+                    { command: 'useradd -G wheel newuser', output: '将用户添加到wheel组' }
+                ],
+                quiz: {
+                    question: '创建用户时自动创建主目录需要哪个参数？',
+                    options: ['-d', '-m', '-h', '-home'],
+                    answer: 1,
+                    explanation: '-m 参数表示创建用户主目录(mkdir)'
+                }
+            },
+            {
+                name: 'userdel',
+                description: '删除用户',
+                category: 'system',
+                usage: 'userdel [选项] 用户名',
+                details: '删除系统用户。使用 -r 参数同时删除用户主目录。',
+                examples: [
+                    { command: 'userdel olduser', output: '删除用户olduser' },
+                    { command: 'userdel -r olduser', output: '删除用户并移除主目录' }
+                ],
+                quiz: {
+                    question: '删除用户时同时删除其主目录需要哪个参数？',
+                    options: ['-f', '-r', '-d', '-remove'],
+                    answer: 1,
+                    explanation: '-r 参数表示同时删除用户主目录'
+                }
+            },
+            {
+                name: 'groupadd',
+                description: '创建用户组',
+                category: 'system',
+                usage: 'groupadd [选项] 组名',
+                details: '创建新的用户组。RHCSA考试重点。',
+                examples: [
+                    { command: 'groupadd developers', output: '创建developers组' },
+                    { command: 'groupadd -g 10000 devops', output: '指定GID创建组' }
+                ],
+                quiz: {
+                    question: '创建用户组的命令是？',
+                    options: ['useradd', 'groupadd', 'addgroup', 'create-group'],
+                    answer: 1,
+                    explanation: 'groupadd 用于创建用户组'
+                }
+            },
+            {
+                name: 'groupdel',
+                description: '删除用户组',
+                category: 'system',
+                usage: 'groupdel 组名',
+                details: '删除指定的用户组。',
+                examples: [
+                    { command: 'groupdel developers', output: '删除developers组' }
+                ],
+                quiz: {
+                    question: '删除用户组的命令是？',
+                    options: ['userdel', 'groupdel', 'delgroup', 'remove-group'],
+                    answer: 1,
+                    explanation: 'groupdel 用于删除用户组'
+                }
+            },
+            {
+                name: 'passwd',
+                description: '设置用户密码',
+                category: 'system',
+                usage: 'passwd [选项] [用户名]',
+                details: '设置或修改用户密码。RHCSA考试重点。',
+                examples: [
+                    { command: 'passwd user1', output: '修改user1的密码' },
+                    { command: 'passwd -l user1', output: '锁定用户账户' },
+                    { command: 'passwd -u user1', output: '解锁用户账户' },
+                    { command: 'passwd -d user1', output: '清除用户密码' }
+                ],
+                quiz: {
+                    question: '锁定用户账户需要哪个参数？',
+                    options: ['-l', '-lock', '-disable', '-d'],
+                    answer: 0,
+                    explanation: '-l 参数用于锁定账户(lock)'
+                }
+            },
+            {
+                name: 'ln',
+                description: '创建链接',
+                category: 'files',
+                usage: 'ln [选项] 源文件 目标文件',
+                details: '创建硬链接或符号链接。RHCSA考试重点。',
+                examples: [
+                    { command: 'ln file.txt link.txt', output: '创建硬链接' },
+                    { command: 'ln -s file.txt symlink.txt', output: '创建符号链接' },
+                    { command: 'ln -s /path/to/dir link', output: '为目录创建符号链接' }
+                ],
+                quiz: {
+                    question: '创建符号链接需要哪个参数？',
+                    options: ['-h', '-s', '-l', '--symbolic'],
+                    answer: 1,
+                    explanation: '-s 参数创建符号链接(symbolic link)'
+                }
+            },
+            {
+                name: 'find',
+                description: '查找文件',
+                category: 'files',
+                usage: 'find [路径] [选项] [表达式]',
+                details: '在文件系统中查找文件。RHCSA考试重点。',
+                examples: [
+                    { command: 'find /home -name "*.txt"', output: '查找txt文件' },
+                    { command: 'find / -type f -size +100M', output: '查找大于100MB的文件' },
+                    { command: 'find /var/log -mtime -7', output: '查找7天内修改的文件' },
+                    { command: 'find / -user root -perm 600', output: '查找root用户且权限为600的文件' }
+                ],
+                quiz: {
+                    question: '查找最近7天内修改的文件使用哪个选项？',
+                    options: ['-atime', '-mtime', '-ctime', '-dtime'],
+                    answer: 1,
+                    explanation: '-mtime -7 表示7天内修改的文件(modification time)'
+                }
+            },
+            {
+                name: 'mount',
+                description: '挂载文件系统',
+                category: 'system',
+                usage: 'mount [选项] 设备 挂载点',
+                details: '挂载文件系统到指定挂载点。RHCSA考试重点。',
+                examples: [
+                    { command: 'mount /dev/sda1 /mnt', output: '挂载设备到/mnt' },
+                    { command: 'mount -o remount,rw /', output: '重新挂载根文件系统为可读写' },
+                    { command: 'mount -a', output: '挂载/etc/fstab中所有文件系统' },
+                    { command: 'mount /dev/cdrom /media/cdrom', output: '挂载光盘' }
+                ],
+                quiz: {
+                    question: '挂载/etc/fstab中所有文件系统的命令是？',
+                    options: ['mount all', 'mount -a', 'mount --all', 'mount /etc/fstab'],
+                    answer: 1,
+                    explanation: 'mount -a 挂载/etc/fstab中所有定义的文件系统'
+                }
+            },
+            {
+                name: 'umount',
+                description: '卸载文件系统',
+                category: 'system',
+                usage: 'umount [选项] 挂载点/设备',
+                details: '卸载已挂载的文件系统。',
+                examples: [
+                    { command: 'umount /mnt', output: '卸载/mnt' },
+                    { command: 'umount /dev/sda1', output: '卸载指定设备' },
+                    { command: 'umount -l /mnt', output: '强制卸载(lazy umount)' }
+                ],
+                quiz: {
+                    question: '设备忙时强制卸载使用哪个参数？',
+                    options: ['-f', '-l', '-force', '-unmount'],
+                    answer: 1,
+                    explanation: '-l 参数进行lazy卸载，即使设备忙也能卸载'
+                }
+            },
+            {
+                name: 'timedatectl',
+                description: '时间管理',
+                category: 'system',
+                usage: 'timedatectl [选项]',
+                details: '查看和设置系统时间、时区。RHCSA考试重点。',
+                examples: [
+                    { command: 'timedatectl', output: '查看时间状态' },
+                    { command: 'timedatectl list-timezones', output: '列出所有时区' },
+                    { command: 'timedatectl set-timezone Asia/Shanghai', output: '设置时区为上海' },
+                    { command: 'timedatectl set-ntp true', output: '启用NTP同步' }
+                ],
+                quiz: {
+                    question: '设置系统时区的命令是？',
+                    options: ['timedatectl set-time', 'timedatectl set-timezone', 'tzselect', 'date -s'],
+                    answer: 1,
+                    explanation: 'timedatectl set-timezone 用于设置时区'
+                }
+            },
+            {
+                name: 'hostnamectl',
+                description: '主机名管理',
+                category: 'system',
+                usage: 'hostnamectl [选项]',
+                details: '查看和设置系统主机名。',
+                examples: [
+                    { command: 'hostnamectl', output: '查看主机名信息' },
+                    { command: 'hostnamectl set-hostname server01', output: '设置主机名为server01' },
+                    { command: 'hostnamectl set-hostname --static server01.example.com', output: '设置静态主机名' }
+                ],
+                quiz: {
+                    question: '设置主机名的命令是？',
+                    options: ['hostname', 'hostnamectl set-hostname', 'set-hostname', 'sysctl hostname'],
+                    answer: 1,
+                    explanation: 'hostnamectl set-hostname 是推荐的设置主机名方式'
+                }
+            },
+            {
+                name: 'cut',
+                description: '文本截取',
+                category: 'files',
+                usage: 'cut [选项] 文件',
+                details: '从文件中截取指定字段。RHCSA考试重点。',
+                examples: [
+                    { command: 'cut -d: -f1 /etc/passwd', output: '截取第一列(用户名)' },
+                    { command: 'cut -d: -f1,3 /etc/passwd', output: '截取第1和第3列' },
+                    { command: 'cut -c1-10 file.txt', output: '截取前10个字符' }
+                ],
+                quiz: {
+                    question: '指定字段分隔符使用哪个参数？',
+                    options: ['-f', '-d', '-s', '-t'],
+                    answer: 1,
+                    explanation: '-d 参数指定字段分隔符(delimiter)'
+                }
+            },
+            {
+                name: 'sed',
+                description: '文本替换',
+                category: 'files',
+                usage: 'sed [选项] 命令 文件',
+                details: '流编辑器，用于文本替换和处理。RHCSA考试重点。',
+                examples: [
+                    { command: 'sed "s/old/new/" file.txt', output: '替换第一个匹配' },
+                    { command: 'sed "s/old/new/g" file.txt', output: '全局替换' },
+                    { command: 'sed -i "s/old/new/g" file.txt', output: '原地替换' },
+                    { command: 'sed "/pattern/d" file.txt', output: '删除匹配行' }
+                ],
+                quiz: {
+                    question: '全局替换需要在s命令后加什么？',
+                    options: ['-g', 'g', '-global', '--global'],
+                    answer: 1,
+                    explanation: '在sed的s命令后加g表示全局替换(global)'
+                }
+            },
+            {
+                name: 'awk',
+                description: '文本处理',
+                category: 'files',
+                usage: 'awk [选项] "模式{动作}" 文件',
+                details: '强大的文本处理工具。RHCSA考试重点。',
+                examples: [
+                    { command: 'awk -F: \'{print $1}\' /etc/passwd', output: '打印第一列' },
+                    { command: 'awk \'{sum+=$1} END{print sum}\' file.txt', output: '求和' },
+                    { command: 'awk -F: \'$3 >= 1000 {print $1}\' /etc/passwd', output: '条件过滤' }
+                ],
+                quiz: {
+                    question: 'awk中打印字段使用什么？',
+                    options: ['echo', 'print', 'write', 'output'],
+                    answer: 1,
+                    explanation: 'awk中使用print命令打印内容'
+                }
+            },
+            {
+                name: 'reboot',
+                description: '重启系统',
+                category: 'system',
+                usage: 'reboot [选项]',
+                details: '重启系统。RHCSA考试重点。',
+                examples: [
+                    { command: 'reboot', output: '立即重启' },
+                    { command: 'reboot -f', output: '强制重启' },
+                    { command: 'reboot --halt', output: '停止系统(等同于halt)' }
+                ],
+                quiz: {
+                    question: '重启系统的命令是？',
+                    options: ['shutdown -r', 'reboot', 'init 6', '以上都可以'],
+                    answer: 3,
+                    explanation: 'reboot、shutdown -r、init 6都可以重启系统'
+                }
+            },
+            {
+                name: 'shutdown',
+                description: '关闭系统',
+                category: 'system',
+                usage: 'shutdown [选项] [时间]',
+                details: '安全关闭或重启系统。',
+                examples: [
+                    { command: 'shutdown -h now', output: '立即关机' },
+                    { command: 'shutdown -r now', output: '立即重启' },
+                    { command: 'shutdown -h +10', output: '10分钟后关机' },
+                    { command: 'shutdown -c', output: '取消待执行的关机' }
+                ],
+                quiz: {
+                    question: '取消待执行的关机使用哪个命令？',
+                    options: ['shutdown -c', 'cancel shutdown', 'shutdown --cancel', 'stop shutdown'],
+                    answer: 0,
+                    explanation: 'shutdown -c 取消待执行的关机操作'
+                }
+            },
+            {
+                name: 'ps',
+                description: '查看进程状态',
+                category: 'process',
+                usage: 'ps [选项]',
+                details: '显示当前运行的进程。常用选项包括aux和ef。',
+                examples: [
+                    { command: 'ps', output: '显示当前用户的进程' },
+                    { command: 'ps aux', output: '显示所有进程的详细信息' },
+                    { command: 'ps -ef', output: '显示所有进程，包含父进程ID' },
+                    { command: 'ps aux | grep firefox', output: '查找firefox进程' }
+                ],
+                quiz: {
+                    question: '查看系统中所有进程的常用命令是？',
+                    options: ['ps', 'ps aux', 'ps -l', 'ps --all'],
+                    answer: 1,
+                    explanation: 'ps aux 可以显示所有用户的所有进程详细信息'
+                }
+            },
+            {
+                name: 'top',
+                description: '实时监控进程',
+                category: 'process',
+                usage: 'top',
+                details: '实时显示系统进程状态和资源使用情况。按q退出。',
+                examples: [
+                    { command: 'top', output: '启动实时进程监控' },
+                    { command: 'top -u user', output: '只显示指定用户的进程' },
+                    { command: 'top -p 1234', output: '只显示指定PID的进程' }
+                ],
+                quiz: {
+                    question: '在top中如何退出？',
+                    options: ['按Ctrl+C', '按q', '按Esc', '输入exit'],
+                    answer: 1,
+                    explanation: '在top中按q键可以退出监控界面'
+                }
+            },
+            {
+                name: 'kill',
+                description: '终止进程',
+                category: 'process',
+                usage: 'kill [信号] PID',
+                details: '向进程发送信号，通常用于终止进程。默认发送TERM信号。',
+                examples: [
+                    { command: 'kill 1234', output: '终止PID为1234的进程' },
+                    { command: 'kill -9 1234', output: '强制终止进程(SIGKILL)' },
+                    { command: 'kill -HUP 1234', output: '发送挂起信号(常用于重载配置)' },
+                    { command: 'killall firefox', output: '终止所有firefox进程' }
+                ],
+                quiz: {
+                    question: '强制终止进程应该使用哪个信号？',
+                    options: ['-1', '-9', '-15', '-TERM'],
+                    answer: 1,
+                    explanation: '-9 对应SIGKILL信号，强制终止进程'
+                }
+            },
+            {
+                name: 'ping',
+                description: '测试网络连接',
+                category: 'network',
+                usage: 'ping [选项] 目标地址',
+                details: '发送ICMP请求测试网络连通性。按Ctrl+C停止。',
+                examples: [
+                    { command: 'ping google.com', output: '测试到google.com的连接' },
+                    { command: 'ping -c 4 192.168.1.1', output: '发送4个包后停止' },
+                    { command: 'ping -i 2 google.com', output: '每隔2秒发送一个包' }
+                ],
+                quiz: {
+                    question: '让ping只发送4个包后停止，应该使用哪个参数？',
+                    options: ['-n 4', '-c 4', '-count 4', '-p 4'],
+                    answer: 1,
+                    explanation: '-c 参数指定发送的包数量(count)'
+                }
+            },
+            {
+                name: 'ssh',
+                description: '远程登录',
+                category: 'network',
+                usage: 'ssh [选项] 用户@主机',
+                details: '通过SSH协议远程登录到另一台计算机。',
+                examples: [
+                    { command: 'ssh user@server.com', output: '登录到远程服务器' },
+                    { command: 'ssh -p 2222 user@server.com', output: '指定端口登录' },
+                    { command: 'ssh -i key.pem user@server.com', output: '使用密钥登录' },
+                    { command: 'ssh user@server.com "command"', output: '在远程执行命令' }
+                ],
+                quiz: {
+                    question: '使用密钥文件登录远程服务器的参数是？',
+                    options: ['-k', '-i', '-key', '-auth'],
+                    answer: 1,
+                    explanation: '-i 参数指定身份认证文件(密钥文件)'
+                }
+            },
+            {
+                name: 'scp',
+                description: '远程文件复制',
+                category: 'network',
+                usage: 'scp [选项] 源文件 用户@主机:目标路径',
+                details: '通过SSH协议在本地和远程主机之间复制文件。',
+                examples: [
+                    { command: 'scp file.txt user@server:/tmp/', output: '上传文件到远程服务器' },
+                    { command: 'scp user@server:/remote/file.txt /local/path/', output: '从远程下载文件' },
+                    { command: 'scp -r dir/ user@server:/tmp/', output: '递归复制目录' }
+                ],
+                quiz: {
+                    question: '使用scp上传目录需要哪个参数？',
+                    options: ['-r', '-d', '-dir', '-recursive'],
+                    answer: 0,
+                    explanation: '-r 参数表示递归复制目录'
+                }
+            },
+            {
+                name: 'ifconfig',
+                description: '配置网络接口',
+                category: 'network',
+                usage: 'ifconfig [接口] [选项]',
+                details: '显示或配置网络接口信息。在现代系统中常被ip命令替代。',
+                examples: [
+                    { command: 'ifconfig', output: '显示所有网络接口' },
+                    { command: 'ifconfig eth0', output: '显示eth0接口信息' },
+                    { command: 'ifconfig eth0 up', output: '启用eth0接口' },
+                    { command: 'ifconfig eth0 down', output: '禁用eth0接口' }
+                ],
+                quiz: {
+                    question: '查看所有网络接口信息的命令是？',
+                    options: ['ifconfig -a', 'ifconfig', 'ip addr', 'netstat -i'],
+                    answer: 1,
+                    explanation: '直接运行ifconfig即可显示所有活动接口信息'
+                }
+            },
+            {
+                name: 'dnf',
+                description: 'Rocky/RHEL包管理',
+                category: 'package',
+                usage: 'dnf [命令] [包名]',
+                details: 'Rocky Linux、CentOS、RHEL系统的包管理工具，用于安装、更新和删除软件包。DNF是YUM的升级版。',
+                examples: [
+                    { command: 'dnf check-update', output: '检查可用更新' },
+                    { command: 'dnf update', output: '升级所有已安装的包' },
+                    { command: 'dnf install nginx', output: '安装nginx' },
+                    { command: 'dnf remove nginx', output: '删除nginx' },
+                    { command: 'dnf search nginx', output: '搜索nginx相关包' },
+                    { command: 'dnf list installed', output: '列出已安装的包' }
+                ],
+                quiz: {
+                    question: '在Rocky Linux中安装软件包的命令是？',
+                    options: ['apt install', 'dnf install', 'yum install', 'rpm -i'],
+                    answer: 1,
+                    explanation: 'dnf install 是Rocky Linux推荐的包安装命令，dnf是yum的升级版'
+                }
+            },
+            {
+                name: 'yum',
+                description: '传统RPM包管理',
+                category: 'package',
+                usage: 'yum [命令] [包名]',
+                details: '传统的RPM包管理工具，在Rocky Linux中仍然可用，是dnf的别名。',
+                examples: [
+                    { command: 'yum update', output: '升级所有已安装的包' },
+                    { command: 'yum install nginx', output: '安装nginx' },
+                    { command: 'yum remove nginx', output: '删除nginx' },
+                    { command: 'yum info nginx', output: '查看包信息' }
+                ],
+                quiz: {
+                    question: 'yum和dnf的关系是？',
+                    options: ['完全不同的工具', 'dnf是yum的升级版', 'yum是dnf的升级版', '没有关系'],
+                    answer: 1,
+                    explanation: 'dnf是yum的下一代版本，在Rocky Linux中yum是dnf的软链接'
+                }
+            },
+            {
+                name: 'rpm',
+                description: 'RPM包管理',
+                category: 'package',
+                usage: 'rpm [选项] 包文件',
+                details: '直接操作RPM包文件，用于安装本地rpm包或查询已安装的包信息。',
+                examples: [
+                    { command: 'rpm -ivh package.rpm', output: '安装本地rpm包' },
+                    { command: 'rpm -e package', output: '卸载已安装的包' },
+                    { command: 'rpm -qa', output: '列出所有已安装的包' },
+                    { command: 'rpm -qi nginx', output: '查看包详细信息' }
+                ],
+                quiz: {
+                    question: '安装本地rpm包文件需要哪个参数？',
+                    options: ['-i', '-ivh', '-e', '-q'],
+                    answer: 1,
+                    explanation: '-i安装 -v显示详细信息 -h显示进度条'
+                }
+            },
+            {
+                name: 'firewall-cmd',
+                description: '防火墙管理',
+                category: 'system',
+                usage: 'firewall-cmd [选项]',
+                details: 'Rocky Linux默认的防火墙管理工具，用于配置firewalld服务。',
+                examples: [
+                    { command: 'firewall-cmd --state', output: '查看防火墙状态' },
+                    { command: 'firewall-cmd --list-all', output: '列出所有规则' },
+                    { command: 'firewall-cmd --add-service=http --permanent', output: '允许HTTP服务' },
+                    { command: 'firewall-cmd --reload', output: '重新加载防火墙配置' },
+                    { command: 'firewall-cmd --add-port=8080/tcp --permanent', output: '允许8080端口' }
+                ],
+                quiz: {
+                    question: '让防火墙规则永久生效需要哪个参数？',
+                    options: ['--temp', '--permanent', '--save', '--apply'],
+                    answer: 1,
+                    explanation: '--permanent 参数使规则永久生效，需要配合 --reload 重新加载'
+                }
+            },
+            {
+                name: 'nmcli',
+                description: '网络管理',
+                category: 'network',
+                usage: 'nmcli [选项]',
+                details: 'NetworkManager的命令行工具，用于配置网络连接。',
+                examples: [
+                    { command: 'nmcli connection show', output: '列出所有网络连接' },
+                    { command: 'nmcli connection up eth0', output: '激活eth0连接' },
+                    { command: 'nmcli connection down eth0', output: '禁用eth0连接' },
+                    { command: 'nmcli device status', output: '查看网络设备状态' }
+                ],
+                quiz: {
+                    question: '查看所有网络连接的命令是？',
+                    options: ['nmcli dev show', 'nmcli con show', 'nmcli net show', 'nmcli list'],
+                    answer: 1,
+                    explanation: 'nmcli connection show 或 nmcli con show 列出所有连接'
+                }
+            },
+            {
+                name: 'systemctl',
+                description: '管理系统服务',
+                category: 'system',
+                usage: 'systemctl [命令] [服务名]',
+                details: 'systemd系统的服务管理工具，用于启动、停止、重启服务。',
+                examples: [
+                    { command: 'systemctl start nginx', output: '启动nginx服务' },
+                    { command: 'systemctl stop nginx', output: '停止nginx服务' },
+                    { command: 'systemctl restart nginx', output: '重启nginx服务' },
+                    { command: 'systemctl enable nginx', output: '设置开机自启' },
+                    { command: 'systemctl status nginx', output: '查看服务状态' }
+                ],
+                quiz: {
+                    question: '设置服务开机自启的命令是？',
+                    options: ['systemctl start', 'systemctl enable', 'systemctl autostart', 'systemctl onboot'],
+                    answer: 1,
+                    explanation: 'systemctl enable 可以设置服务开机自动启动'
+                }
+            },
+            {
+                name: 'df',
+                description: '查看磁盘空间',
+                category: 'system',
+                usage: 'df [选项]',
+                details: '显示文件系统的磁盘空间使用情况。',
+                examples: [
+                    { command: 'df', output: '显示所有挂载点的磁盘使用情况' },
+                    { command: 'df -h', output: '以人类可读格式显示' },
+                    { command: 'df -T', output: '显示文件系统类型' }
+                ],
+                quiz: {
+                    question: '以人类可读格式显示磁盘空间的参数是？',
+                    options: ['-h', '-human', '-k', '-m'],
+                    answer: 0,
+                    explanation: '-h 参数表示人类可读格式(human readable)'
+                }
+            },
+            {
+                name: 'du',
+                description: '查看目录大小',
+                category: 'system',
+                usage: 'du [选项] [目录]',
+                details: '显示目录或文件的磁盘使用情况。',
+                examples: [
+                    { command: 'du', output: '显示当前目录各子目录大小' },
+                    { command: 'du -h', output: '以人类可读格式显示' },
+                    { command: 'du -sh', output: '显示总大小(h表示人类可读，s表示汇总)' },
+                    { command: 'du -h --max-depth=1', output: '只显示一级子目录' }
+                ],
+                quiz: {
+                    question: '查看当前目录总大小的命令是？',
+                    options: ['du -s', 'du -sh', 'du -h', 'du total'],
+                    answer: 1,
+                    explanation: '-s 参数汇总显示，-h 参数人类可读格式'
+                }
+            },
+            {
+                name: 'free',
+                description: '查看内存使用',
+                category: 'system',
+                usage: 'free [选项]',
+                details: '显示系统内存和交换空间的使用情况。',
+                examples: [
+                    { command: 'free', output: '显示内存信息' },
+                    { command: 'free -h', output: '以人类可读格式显示' },
+                    { command: 'free -m', output: '以MB为单位显示' },
+                    { command: 'free -s 2', output: '每隔2秒刷新一次' }
+                ],
+                quiz: {
+                    question: '以MB为单位显示内存信息的参数是？',
+                    options: ['-mb', '-m', '-megabyte', '-size m'],
+                    answer: 1,
+                    explanation: '-m 参数表示以MB为单位显示'
+                }
+            },
+            {
+                name: 'tar',
+                description: '打包压缩文件',
+                category: 'files',
+                usage: 'tar [选项] 归档文件 源文件',
+                details: '创建或解压tar归档文件。常与gzip/bzip2配合使用。',
+                examples: [
+                    { command: 'tar -cvf archive.tar dir/', output: '创建tar归档' },
+                    { command: 'tar -xvf archive.tar', output: '解压tar归档' },
+                    { command: 'tar -czvf archive.tar.gz dir/', output: '创建gzip压缩归档' },
+                    { command: 'tar -xzvf archive.tar.gz', output: '解压gzip归档' }
+                ],
+                quiz: {
+                    question: '创建gzip压缩的tar归档需要哪些参数？',
+                    options: ['-cvf', '-czvf', '-xvf', '-xzvf'],
+                    answer: 1,
+                    explanation: '-c创建 -z gzip压缩 -v显示过程 -f指定文件名'
+                }
+            },
+            {
+                name: 'wget',
+                description: '下载文件',
+                category: 'network',
+                usage: 'wget [选项] URL',
+                details: '从网络上下载文件。支持HTTP、HTTPS和FTP协议。',
+                examples: [
+                    { command: 'wget http://example.com/file.zip', output: '下载文件' },
+                    { command: 'wget -O newname.zip http://example.com/file.zip', output: '指定保存文件名' },
+                    { command: 'wget -P /tmp/ http://example.com/file.zip', output: '保存到指定目录' },
+                    { command: 'wget -c http://example.com/file.zip', output: '断点续传' }
+                ],
+                quiz: {
+                    question: '断点续传下载文件需要哪个参数？',
+                    options: ['-r', '-c', '-resume', '-continue'],
+                    answer: 1,
+                    explanation: '-c 参数表示继续(continue)未完成的下载'
+                }
+            },
+            {
+                name: 'curl',
+                description: '传输数据',
+                category: 'network',
+                usage: 'curl [选项] URL',
+                details: '向服务器发送HTTP请求或下载文件。功能强大的工具。',
+                examples: [
+                    { command: 'curl http://example.com', output: '获取网页内容' },
+                    { command: 'curl -o file.html http://example.com', output: '保存到文件' },
+                    { command: 'curl -X POST -d "data=value" http://example.com', output: '发送POST请求' },
+                    { command: 'curl -H "Content-Type: application/json" http://example.com', output: '设置请求头' }
+                ],
+                quiz: {
+                    question: '发送POST请求需要哪个参数？',
+                    options: ['-GET', '-POST', '-X POST', '--post'],
+                    answer: 2,
+                    explanation: '-X 参数指定HTTP方法，-X POST表示发送POST请求'
+                }
+            },
+            {
+                name: 'journalctl',
+                description: '查看系统日志',
+                category: 'system',
+                usage: 'journalctl [选项]',
+                details: '查看systemd日志。是现代Linux系统的日志管理工具。',
+                examples: [
+                    { command: 'journalctl', output: '查看所有日志' },
+                    { command: 'journalctl -u nginx', output: '查看nginx服务日志' },
+                    { command: 'journalctl -f', output: '实时跟踪日志' },
+                    { command: 'journalctl --since "1 hour ago"', output: '查看最近1小时日志' }
+                ],
+                quiz: {
+                    question: '实时跟踪日志的参数是？',
+                    options: ['-t', '-f', '-follow', '-live'],
+                    answer: 1,
+                    explanation: '-f 参数表示跟踪(follow)日志输出'
+                }
+            },
+            {
+                name: 'wc',
+                description: '统计文本',
+                category: 'files',
+                usage: 'wc [选项] 文件',
+                details: '统计文件的行数、字数、字节数。',
+                examples: [
+                    { command: 'wc file.txt', output: '统计行数、字数、字节数' },
+                    { command: 'wc -l file.txt', output: '只统计行数' },
+                    { command: 'wc -w file.txt', output: '只统计单词数' },
+                    { command: 'wc -c file.txt', output: '只统计字节数' }
+                ],
+                quiz: {
+                    question: '统计文件行数使用哪个参数？',
+                    options: ['-l', '-w', '-c', '-n'],
+                    answer: 0,
+                    explanation: '-l 参数统计行数(lines)'
+                }
+            },
+            {
+                name: 'sort',
+                description: '排序',
+                category: 'files',
+                usage: 'sort [选项] 文件',
+                details: '对文本文件进行排序。',
+                examples: [
+                    { command: 'sort file.txt', output: '按字母顺序排序' },
+                    { command: 'sort -n file.txt', output: '按数字排序' },
+                    { command: 'sort -r file.txt', output: '反向排序' },
+                    { command: 'sort -u file.txt', output: '去重排序' }
+                ],
+                quiz: {
+                    question: '按数字排序需要哪个参数？',
+                    options: ['-n', '-num', '-numeric', '-d'],
+                    answer: 0,
+                    explanation: '-n 参数按数字排序(numeric)'
+                }
+            },
+            {
+                name: 'uniq',
+                description: '去重',
+                category: 'files',
+                usage: 'uniq [选项] 文件',
+                details: '去除重复的相邻行。通常与sort配合使用。',
+                examples: [
+                    { command: 'uniq file.txt', output: '去除相邻重复行' },
+                    { command: 'uniq -c file.txt', output: '显示重复次数' },
+                    { command: 'uniq -d file.txt', output: '只显示重复的行' },
+                    { command: 'sort file.txt | uniq', output: '先排序再去重' }
+                ],
+                quiz: {
+                    question: '显示重复次数使用哪个参数？',
+                    options: ['-c', '-count', '-d', '-u'],
+                    answer: 0,
+                    explanation: '-c 参数显示每行出现的次数(count)'
+                }
+            },
+            {
+                name: 'tr',
+                description: '字符替换',
+                category: 'tools',
+                usage: 'tr [选项] 字符集1 字符集2',
+                details: '替换或删除字符。',
+                examples: [
+                    { command: 'tr a-z A-Z', output: '小写转大写' },
+                    { command: 'tr -d " "', output: '删除空格' },
+                    { command: 'tr " " "\n"', output: '空格转换行' }
+                ],
+                quiz: {
+                    question: '删除字符使用哪个参数？',
+                    options: ['-d', '-delete', '-remove', '-r'],
+                    answer: 0,
+                    explanation: '-d 参数删除指定字符(delete)'
+                }
+            },
+            {
+                name: 'gzip',
+                description: 'gzip压缩',
+                category: 'compress',
+                usage: 'gzip [选项] 文件',
+                details: '使用gzip算法压缩文件。',
+                examples: [
+                    { command: 'gzip file.txt', output: '压缩文件' },
+                    { command: 'gzip -d file.txt.gz', output: '解压文件' },
+                    { command: 'gzip -k file.txt', output: '保留原文件' },
+                    { command: 'gzip -9 file.txt', output: '最大压缩' }
+                ],
+                quiz: {
+                    question: '解压gzip文件使用哪个参数？',
+                    options: ['-x', '-d', '-unzip', '-extract'],
+                    answer: 1,
+                    explanation: '-d 参数解压(decompress)'
+                }
+            },
+            {
+                name: 'bzip2',
+                description: 'bzip2压缩',
+                category: 'compress',
+                usage: 'bzip2 [选项] 文件',
+                details: '使用bzip2算法压缩文件，压缩率比gzip更高。',
+                examples: [
+                    { command: 'bzip2 file.txt', output: '压缩文件' },
+                    { command: 'bzip2 -d file.txt.bz2', output: '解压文件' },
+                    { command: 'bzip2 -k file.txt', output: '保留原文件' }
+                ],
+                quiz: {
+                    question: 'bzip2和gzip哪个压缩率更高？',
+                    options: ['gzip', 'bzip2', '一样', '不确定'],
+                    answer: 1,
+                    explanation: 'bzip2通常比gzip压缩率更高'
+                }
+            },
+            {
+                name: 'zip',
+                description: 'ZIP压缩',
+                category: 'compress',
+                usage: 'zip [选项] 压缩包 文件',
+                details: '创建ZIP格式压缩包。',
+                examples: [
+                    { command: 'zip archive.zip file.txt', output: '创建压缩包' },
+                    { command: 'zip -r archive.zip dir/', output: '递归压缩目录' },
+                    { command: 'zip -e archive.zip file.txt', output: '创建加密压缩包' }
+                ],
+                quiz: {
+                    question: '递归压缩目录需要哪个参数？',
+                    options: ['-r', '-d', '-recursive', '-dir'],
+                    answer: 0,
+                    explanation: '-r 参数递归压缩目录'
+                }
+            },
+            {
+                name: 'unzip',
+                description: '解压ZIP',
+                category: 'compress',
+                usage: 'unzip [选项] 压缩包',
+                details: '解压ZIP格式压缩包。',
+                examples: [
+                    { command: 'unzip archive.zip', output: '解压压缩包' },
+                    { command: 'unzip archive.zip -d /tmp/', output: '解压到指定目录' },
+                    { command: 'unzip -l archive.zip', output: '列出压缩包内容' }
+                ],
+                quiz: {
+                    question: '解压到指定目录使用哪个参数？',
+                    options: ['-d', '-dir', '-path', '-o'],
+                    answer: 0,
+                    explanation: '-d 参数指定解压目录(directory)'
+                }
+            },
+            {
+                name: 'dig',
+                description: 'DNS查询',
+                category: 'network',
+                usage: 'dig [选项] 域名',
+                details: 'DNS查询工具，比nslookup功能更强大。',
+                examples: [
+                    { command: 'dig example.com', output: '查询域名DNS记录' },
+                    { command: 'dig example.com A', output: '只查询A记录' },
+                    { command: 'dig example.com MX', output: '查询MX记录' },
+                    { command: 'dig @8.8.8.8 example.com', output: '指定DNS服务器' }
+                ],
+                quiz: {
+                    question: '查询MX记录的命令是？',
+                    options: ['dig domain MX', 'dig -mx domain', 'mxlookup domain', 'dnsquery -mx domain'],
+                    answer: 0,
+                    explanation: 'dig domain MX 查询MX记录'
+                }
+            },
+            {
+                name: 'traceroute',
+                description: '路由追踪',
+                category: 'network',
+                usage: 'traceroute [选项] 目标',
+                details: '追踪数据包到达目标的路径。',
+                examples: [
+                    { command: 'traceroute example.com', output: '追踪路由' },
+                    { command: 'traceroute -I example.com', output: '使用ICMP协议' },
+                    { command: 'traceroute -m 20 example.com', output: '最大跳数20' }
+                ],
+                quiz: {
+                    question: '设置最大跳数使用哪个参数？',
+                    options: ['-m', '-max', '-hop', '-h'],
+                    answer: 0,
+                    explanation: '-m 参数设置最大跳数(max hops)'
+                }
+            },
+            {
+                name: 'ss',
+                description: '网络连接',
+                category: 'network',
+                usage: 'ss [选项]',
+                details: '查看网络连接信息，是netstat的替代品。',
+                examples: [
+                    { command: 'ss -tuln', output: '查看监听端口' },
+                    { command: 'ss -tnp', output: '查看TCP连接及进程' },
+                    { command: 'ss -tnp | grep LISTEN', output: '查看监听中的连接' }
+                ],
+                quiz: {
+                    question: '查看监听端口使用哪个命令？',
+                    options: ['ss -tuln', 'netstat -tuln', 'both', 'none'],
+                    answer: 2,
+                    explanation: 'ss -tuln 和 netstat -tuln 都可以查看监听端口'
+                }
+            },
+            {
+                name: 'usermod',
+                description: '修改用户',
+                category: 'system',
+                usage: 'usermod [选项] 用户名',
+                details: '修改用户属性。',
+                examples: [
+                    { command: 'usermod -aG wheel user1', output: '添加到wheel组' },
+                    { command: 'usermod -s /bin/bash user1', output: '修改登录shell' },
+                    { command: 'usermod -d /home/new user1', output: '修改主目录' }
+                ],
+                quiz: {
+                    question: '添加用户到附加组使用哪个参数？',
+                    options: ['-G', '-aG', '-group', '-addgroup'],
+                    answer: 1,
+                    explanation: '-aG 参数添加到附加组(-a追加，-G组名)'
+                }
+            },
+            {
+                name: 'groupmod',
+                description: '修改组',
+                category: 'system',
+                usage: 'groupmod [选项] 组名',
+                details: '修改用户组属性。',
+                examples: [
+                    { command: 'groupmod -n newname oldname', output: '重命名组' },
+                    { command: 'groupmod -g 10000 group1', output: '修改GID' }
+                ],
+                quiz: {
+                    question: '修改组名使用哪个参数？',
+                    options: ['-n', '-name', '-rename', '-g'],
+                    answer: 0,
+                    explanation: '-n 参数修改组名(name)'
+                }
+            },
+            {
+                name: 'iostat',
+                description: 'IO统计',
+                category: 'system',
+                usage: 'iostat [选项] [设备]',
+                details: '查看磁盘IO统计信息。',
+                examples: [
+                    { command: 'iostat', output: '显示IO统计' },
+                    { command: 'iostat -x', output: '显示详细统计' },
+                    { command: 'iostat 2', output: '每2秒刷新一次' },
+                    { command: 'iostat sda', output: '指定设备' }
+                ],
+                quiz: {
+                    question: '显示详细IO统计使用哪个参数？',
+                    options: ['-x', '-d', '-detail', '-v'],
+                    answer: 0,
+                    explanation: '-x 参数显示详细IO统计'
+                }
+            },
+            {
+                name: 'vmstat',
+                description: '虚拟内存统计',
+                category: 'system',
+                usage: 'vmstat [选项] [间隔]',
+                details: '报告虚拟内存统计信息。',
+                examples: [
+                    { command: 'vmstat', output: '显示内存统计' },
+                    { command: 'vmstat 2', output: '每2秒刷新一次' },
+                    { command: 'vmstat -s', output: '显示内存使用汇总' }
+                ],
+                quiz: {
+                    question: 'vmstat显示的si和so代表什么？',
+                    options: ['swap in/out', 'system info', 'storage info', 'cpu stats'],
+                    answer: 0,
+                    explanation: 'si表示swap in，so表示swap out'
+                }
+            },
+            {
+                name: 'history',
+                description: '命令历史',
+                category: 'tools',
+                usage: 'history [选项]',
+                details: '查看命令历史记录。',
+                examples: [
+                    { command: 'history', output: '显示命令历史' },
+                    { command: 'history | grep "command"', output: '搜索历史命令' },
+                    { command: '!100', output: '执行第100条命令' },
+                    { command: '!!', output: '执行上一条命令' }
+                ],
+                quiz: {
+                    question: '执行上一条命令使用什么？',
+                    options: ['!1', '!!', '!-1', '!last'],
+                    answer: 1,
+                    explanation: '!! 执行上一条命令'
+                }
+            },
+            {
+                name: 'which',
+                description: '查找命令位置',
+                category: 'tools',
+                usage: 'which 命令',
+                details: '查找命令的绝对路径。',
+                examples: [
+                    { command: 'which ls', output: '查找ls命令位置' },
+                    { command: 'which python3', output: '查找python3命令位置' }
+                ],
+                quiz: {
+                    question: '查找命令绝对路径的命令是？',
+                    options: ['find', 'whereis', 'which', 'locate'],
+                    answer: 2,
+                    explanation: 'which 查找命令的绝对路径'
+                }
+            },
+            {
+                name: 'locate',
+                description: '快速查找文件',
+                category: 'tools',
+                usage: 'locate [选项] 文件名',
+                details: '通过数据库快速查找文件，比find更快。',
+                examples: [
+                    { command: 'locate file.txt', output: '查找文件' },
+                    { command: 'locate -i file.txt', output: '忽略大小写' },
+                    { command: 'updatedb', output: '更新数据库' }
+                ],
+                quiz: {
+                    question: '更新locate数据库的命令是？',
+                    options: ['update locate', 'updatedb', 'locate -u', 'refresh db'],
+                    answer: 1,
+                    explanation: 'updatedb 更新locate数据库'
+                }
+            },
+            {
+                name: 'who',
+                description: '查看登录用户',
+                category: 'tools',
+                usage: 'who [选项]',
+                details: '查看当前登录的用户。',
+                examples: [
+                    { command: 'who', output: '查看登录用户' },
+                    { command: 'whoami', output: '显示当前用户' },
+                    { command: 'who -b', output: '显示系统启动时间' }
+                ],
+                quiz: {
+                    question: '显示当前用户名的命令是？',
+                    options: ['who', 'whoami', 'id', 'who am i'],
+                    answer: 1,
+                    explanation: 'whoami 显示当前用户名'
+                }
+            },
+            {
+                name: 'last',
+                description: '查看登录历史',
+                category: 'tools',
+                usage: 'last [选项]',
+                details: '查看用户登录历史记录。',
+                examples: [
+                    { command: 'last', output: '查看登录历史' },
+                    { command: 'last -n 10', output: '显示最近10条' },
+                    { command: 'last reboot', output: '查看重启记录' }
+                ],
+                quiz: {
+                    question: '查看系统重启记录使用哪个命令？',
+                    options: ['last reboot', 'last -r', 'reboot history', 'uptime -r'],
+                    answer: 0,
+                    explanation: 'last reboot 查看系统重启记录'
+                }
+            },
+            {
+                name: 'head',
+                description: '查看文件头部',
+                category: 'tools',
+                usage: 'head [选项] 文件',
+                details: '查看文件的前几行。',
+                examples: [
+                    { command: 'head file.txt', output: '查看前10行' },
+                    { command: 'head -n 5 file.txt', output: '查看前5行' },
+                    { command: 'head -c 100 file.txt', output: '查看前100字节' }
+                ],
+                quiz: {
+                    question: '查看文件前5行使用哪个命令？',
+                    options: ['head -5', 'head -n 5', 'head --lines 5', '以上都可以'],
+                    answer: 3,
+                    explanation: 'head -5, head -n 5, head --lines 5 都可以'
+                }
+            },
+            {
+                name: 'tail',
+                description: '查看文件尾部',
+                category: 'tools',
+                usage: 'tail [选项] 文件',
+                details: '查看文件的后几行，常用于监控日志。',
+                examples: [
+                    { command: 'tail file.txt', output: '查看后10行' },
+                    { command: 'tail -n 5 file.txt', output: '查看后5行' },
+                    { command: 'tail -f logfile.log', output: '实时跟踪文件' },
+                    { command: 'tail -F logfile.log', output: '跟踪并跟随文件重命名' }
+                ],
+                quiz: {
+                    question: '实时跟踪日志文件使用哪个参数？',
+                    options: ['-f', '-follow', '-t', '-live'],
+                    answer: 0,
+                    explanation: '-f 参数实时跟踪文件(follow)'
+                }
+            },
+            {
+                name: 'bash',
+                description: 'Bash脚本',
+                category: 'script',
+                usage: 'bash 脚本.sh',
+                details: 'Bash是Linux默认shell，脚本编程是运维核心技能。支持变量、条件判断、循环、函数等。',
+                examples: [
+                    { command: '#!/bin/bash', output: '脚本头部声明' },
+                    { command: 'VAR="hello"', output: '变量定义' },
+                    { command: 'echo $VAR', output: '输出变量' },
+                    { command: 'bash script.sh', output: '执行脚本' }
+                ],
+                quiz: {
+                    question: 'Bash脚本的第一行通常是什么？',
+                    options: ['#/bin/bash', '#!/bin/bash', '#!bash', '//bin/bash'],
+                    answer: 1,
+                    explanation: '#!/bin/bash 声明使用Bash解释器'
+                }
+            },
+            {
+                name: 'if',
+                description: '条件判断',
+                category: 'script',
+                usage: 'if [ 条件 ]; then ... fi',
+                details: 'Bash脚本中的条件判断语句。',
+                examples: [
+                    { command: 'if [ -f file.txt ]; then echo "存在"; fi', output: '检查文件存在' },
+                    { command: 'if [ $a -gt 10 ]; then echo "大于10"; fi', output: '数值比较' },
+                    { command: 'if [ "$var" = "yes" ]; then echo "等于yes"; fi', output: '字符串比较' },
+                    { command: 'if [ -z "$var" ]; then echo "空变量"; fi', output: '检查空变量' }
+                ],
+                quiz: {
+                    question: '检查文件是否存在使用哪个选项？',
+                    options: ['-f', '-e', '-s', '-d'],
+                    answer: 0,
+                    explanation: '-f 检查普通文件存在且为常规文件'
+                }
+            },
+            {
+                name: 'for',
+                description: 'for循环',
+                category: 'script',
+                usage: 'for 变量 in 列表; do ... done',
+                details: 'Bash脚本中的for循环语句。',
+                examples: [
+                    { command: 'for i in 1 2 3; do echo $i; done', output: '遍历列表' },
+                    { command: 'for file in *.txt; do echo $file; done', output: '遍历文件' },
+                    { command: 'for ((i=1; i<=5; i++)); do echo $i; done', output: 'C风格循环' }
+                ],
+                quiz: {
+                    question: '遍历当前目录所有txt文件的命令是？',
+                    options: ['for f in *.txt', 'for f in ./*.txt', 'for f in $(ls *.txt)', '以上都可以'],
+                    answer: 3,
+                    explanation: '三种写法都可以遍历txt文件'
+                }
+            },
+            {
+                name: 'while',
+                description: 'while循环',
+                category: 'script',
+                usage: 'while [ 条件 ]; do ... done',
+                details: 'Bash脚本中的while循环语句。',
+                examples: [
+                    { command: 'while [ $count -lt 10 ]; do ... done', output: '条件循环' },
+                    { command: 'while read line; do echo $line; done < file.txt', output: '逐行读取文件' },
+                    { command: 'while true; do echo "loop"; sleep 1; done', output: '无限循环' }
+                ],
+                quiz: {
+                    question: '逐行读取文件file.txt使用哪个命令？',
+                    options: ['while read line; do ... done < file.txt', 'cat file.txt | while read line', '两种都可以', 'for line in $(cat file.txt)'],
+                    answer: 2,
+                    explanation: '两种方式都可以逐行读取文件'
+                }
+            },
+            {
+                name: 'case',
+                description: 'case分支',
+                category: 'script',
+                usage: 'case 变量 in ... esac',
+                details: 'Bash脚本中的case分支语句。',
+                examples: [
+                    { command: 'case $choice in 1) echo "选项1";; esac', output: '简单case' },
+                    { command: 'case $var in *.txt) echo "文本文件";; esac', output: '通配符匹配' },
+                    { command: 'case $var in [a-z]) echo "小写字母";; esac', output: '字符范围' }
+                ],
+                quiz: {
+                    question: 'case语句结束符是什么？',
+                    options: ['esac', 'fi', 'done', 'end'],
+                    answer: 0,
+                    explanation: 'case语句以esac结束（case的倒写）'
+                }
+            },
+            {
+                name: 'function',
+                description: '函数定义',
+                category: 'script',
+                usage: 'function name() { ... }',
+                details: 'Bash脚本中的函数定义。',
+                examples: [
+                    { command: 'function hello() { echo "Hello"; }', output: '定义函数' },
+                    { command: 'hello() { echo "Hello"; }', output: '简化语法' },
+                    { command: 'hello', output: '调用函数' },
+                    { command: 'func() { echo $1 $2; } && func a b', output: '带参数函数' }
+                ],
+                quiz: {
+                    question: '函数的第一个参数如何引用？',
+                    options: ['$0', '$1', '$arg1', '$param1'],
+                    answer: 1,
+                    explanation: '$1表示第一个参数，$0是脚本名'
+                }
+            },
+            {
+                name: 'crontab',
+                description: '定时任务',
+                category: 'script',
+                usage: 'crontab [选项]',
+                details: 'Linux定时任务调度工具，用于周期性执行脚本。',
+                examples: [
+                    { command: 'crontab -e', output: '编辑定时任务' },
+                    { command: 'crontab -l', output: '列出定时任务' },
+                    { command: 'crontab -r', output: '删除定时任务' },
+                    { command: '0 2 * * * /backup/script.sh', output: '每天凌晨2点执行' }
+                ],
+                quiz: {
+                    question: 'crontab格式中五个字段分别代表什么？',
+                    options: ['分时日月周', '时分日月周', '分日月周时', '日月周时分'],
+                    answer: 0,
+                    explanation: 'crontab格式: 分 时 日 月 周'
+                }
+            },
+            {
+                name: 'curl',
+                description: 'HTTP客户端',
+                category: 'network',
+                usage: 'curl [选项] URL',
+                details: '强大的命令行HTTP客户端，支持GET/POST等请求。',
+                examples: [
+                    { command: 'curl http://example.com', output: 'GET请求' },
+                    { command: 'curl -X POST -d "data=value" http://example.com', output: 'POST请求' },
+                    { command: 'curl -O http://example.com/file.zip', output: '下载文件' },
+                    { command: 'curl -H "Content-Type: application/json" -d \'{"key":"val"}\' http://api.com', output: 'JSON请求' }
+                ],
+                quiz: {
+                    question: '发送POST请求使用哪个参数？',
+                    options: ['-X POST', '-POST', '--post', '-P'],
+                    answer: 0,
+                    explanation: '-X POST 指定请求方法为POST'
+                }
+            },
+            {
+                name: 'scp',
+                description: '安全复制',
+                category: 'network',
+                usage: 'scp [选项] 源 目标',
+                details: '基于SSH的安全文件复制工具。',
+                examples: [
+                    { command: 'scp file.txt user@host:/path/', output: '上传文件' },
+                    { command: 'scp user@host:/path/file.txt .', output: '下载文件' },
+                    { command: 'scp -r dir/ user@host:/path/', output: '递归复制目录' },
+                    { command: 'scp -P 2222 file.txt user@host:/path/', output: '指定端口' }
+                ],
+                quiz: {
+                    question: '递归复制目录使用哪个参数？',
+                    options: ['-r', '-R', '--recursive', '以上都可以'],
+                    answer: 3,
+                    explanation: '-r和-R都表示递归复制'
+                }
+            },
+            {
+                name: 'tar',
+                description: '打包压缩',
+                category: 'compress',
+                usage: 'tar [选项] 目标文件 源文件',
+                details: '打包压缩工具，支持多种压缩格式。',
+                examples: [
+                    { command: 'tar -czvf archive.tar.gz dir/', output: '创建gz压缩包' },
+                    { command: 'tar -xzvf archive.tar.gz', output: '解压gz压缩包' },
+                    { command: 'tar -cjvf archive.tar.bz2 dir/', output: '创建bz2压缩包' },
+                    { command: 'tar -tf archive.tar.gz', output: '查看压缩包内容' }
+                ],
+                quiz: {
+                    question: '创建gz压缩包使用哪些参数？',
+                    options: ['-czvf', '-xzvf', '-cjvf', '-ctvf'],
+                    answer: 0,
+                    explanation: '-c创建 -z gzip -v显示 -f文件名'
+                }
+            },
+            {
+                name: 'git',
+                description: '版本控制',
+                category: 'script',
+                usage: 'git [命令] [选项]',
+                details: '分布式版本控制系统，运维必备工具。',
+                examples: [
+                    { command: 'git clone https://github.com/user/repo.git', output: '克隆仓库' },
+                    { command: 'git add .', output: '暂存修改' },
+                    { command: 'git commit -m "message"', output: '提交修改' },
+                    { command: 'git push origin main', output: '推送到远程' }
+                ],
+                quiz: {
+                    question: '暂存所有修改使用哪个命令？',
+                    options: ['git add .', 'git add *', 'git add --all', '以上都可以'],
+                    answer: 3,
+                    explanation: '三种方式都可以暂存所有修改'
+                }
+            },
+            {
+                name: 'sed',
+                description: '流编辑器',
+                category: 'files',
+                usage: 'sed [选项] "命令" 文件',
+                details: '强大的文本处理工具，支持正则表达式。',
+                examples: [
+                    { command: 'sed "s/old/new/g" file.txt', output: '全局替换' },
+                    { command: 'sed -i "s/old/new/g" file.txt', output: '原地替换' },
+                    { command: 'sed "/pattern/d" file.txt', output: '删除匹配行' },
+                    { command: 'sed "2d" file.txt', output: '删除第2行' }
+                ],
+                quiz: {
+                    question: '原地修改文件使用哪个参数？',
+                    options: ['-i', '-inplace', '--edit', '-w'],
+                    answer: 0,
+                    explanation: '-i 参数原地修改文件(in-place)'
+                }
+            },
+            {
+                name: 'awk',
+                description: '文本处理',
+                category: 'files',
+                usage: 'awk [选项] "脚本" 文件',
+                details: '强大的文本处理语言，适合处理表格数据。',
+                examples: [
+                    { command: 'awk "{print $1}" file.txt', output: '打印第一列' },
+                    { command: 'awk -F":" "{print $1}" /etc/passwd', output: '指定分隔符' },
+                    { command: 'awk "$3 > 100" file.txt', output: '条件过滤' },
+                    { command: 'awk "{sum+=$1} END {print sum}" file.txt', output: '求和' }
+                ],
+                quiz: {
+                    question: '打印文件第二列使用哪个命令？',
+                    options: ['awk "{print $2}"', 'awk "{print $NF-1}"', 'awk -f2', 'awk --field 2'],
+                    answer: 0,
+                    explanation: '$2表示第二列，$NF表示最后一列'
+                }
+            },
+            {
+                name: 'cut',
+                description: '字段截取',
+                category: 'files',
+                usage: 'cut [选项] 文件',
+                details: '截取文本文件中的指定字段。',
+                examples: [
+                    { command: 'cut -d":" -f1 /etc/passwd', output: '截取第一列' },
+                    { command: 'cut -c1-10 file.txt', output: '截取前10个字符' },
+                    { command: 'cut -f2,4 file.txt', output: '截取第2和第4列' }
+                ],
+                quiz: {
+                    question: '指定分隔符使用哪个参数？',
+                    options: ['-d', '-delimiter', '-sep', '-f'],
+                    answer: 0,
+                    explanation: '-d 参数指定字段分隔符(delimiter)'
+                }
+            },
+            {
+                name: 'tee',
+                description: '输出到文件和屏幕',
+                category: 'files',
+                usage: '命令 | tee 文件',
+                details: '将命令输出同时保存到文件并显示在屏幕上。',
+                examples: [
+                    { command: 'ls | tee filelist.txt', output: '保存列表到文件' },
+                    { command: 'command | tee -a log.txt', output: '追加到文件' },
+                    { command: 'command 2>&1 | tee log.txt', output: '保存stderr' }
+                ],
+                quiz: {
+                    question: '追加模式使用哪个参数？',
+                    options: ['-a', '-append', '->>', '-add'],
+                    answer: 0,
+                    explanation: '-a 参数追加内容(append)'
+                }
+            },
+            {
+                name: 'xargs',
+                description: '参数传递',
+                category: 'files',
+                usage: '命令 | xargs 命令',
+                details: '将前一个命令的输出作为参数传递给下一个命令。',
+                examples: [
+                    { command: 'find . -name "*.txt" | xargs rm', output: '删除所有txt文件' },
+                    { command: 'ls *.log | xargs -I {} cp {} backup/', output: '复制文件' },
+                    { command: 'echo "a b c" | xargs -n 1', output: '每行一个参数' }
+                ],
+                quiz: {
+                    question: '将输出作为参数传递的命令是？',
+                    options: ['xargs', 'pipe', '|', 'args'],
+                    answer: 0,
+                    explanation: 'xargs将标准输入转换为命令行参数'
+                }
+            },
+            {
+                name: 'bc',
+                description: '计算器',
+                category: 'script',
+                usage: 'bc [选项]',
+                details: '命令行计算器，支持数学运算。',
+                examples: [
+                    { command: 'echo "2+3" | bc', output: '简单加法' },
+                    { command: 'echo "scale=2; 10/3" | bc', output: '设置小数位' },
+                    { command: 'echo "sqrt(16)" | bc', output: '平方根' },
+                    { command: 'echo "10^2" | bc', output: '幂运算' }
+                ],
+                quiz: {
+                    question: '设置小数位数使用哪个命令？',
+                    options: ['scale=2', 'precision=2', 'decimal=2', '-d 2'],
+                    answer: 0,
+                    explanation: 'scale=2 设置保留2位小数'
+                }
+            },
+            {
+                name: 'date',
+                description: '日期时间',
+                category: 'system',
+                usage: 'date [选项] [格式]',
+                details: '显示或设置系统日期时间。',
+                examples: [
+                    { command: 'date', output: '显示当前时间' },
+                    { command: 'date +%Y%m%d', output: '显示日期(YYYYMMDD)' },
+                    { command: 'date +%H:%M:%S', output: '显示时间' },
+                    { command: 'date -d "yesterday"', output: '显示昨天日期' }
+                ],
+                quiz: {
+                    question: '显示当前年份使用哪个格式符？',
+                    options: ['%Y', '%y', '%year', '-Y'],
+                    answer: 0,
+                    explanation: '%Y 显示4位年份，%y显示2位年份'
+                }
+            },
+            {
+                name: 'sleep',
+                description: '延迟执行',
+                category: 'script',
+                usage: 'sleep 时间',
+                details: '暂停指定时间，常用于脚本中的延时操作。',
+                examples: [
+                    { command: 'sleep 5', output: '等待5秒' },
+                    { command: 'sleep 1m', output: '等待1分钟' },
+                    { command: 'sleep 1h', output: '等待1小时' },
+                    { command: 'sleep 0.5', output: '等待0.5秒' }
+                ],
+                quiz: {
+                    question: '等待1分钟使用哪个命令？',
+                    options: ['sleep 60', 'sleep 1m', 'sleep 1min', '以上都可以'],
+                    answer: 3,
+                    explanation: 'sleep 60 和 sleep 1m 都表示等待1分钟'
+                }
+            },
+            {
+                name: 'exit',
+                description: '退出脚本',
+                category: 'script',
+                usage: 'exit [状态码]',
+                details: '退出当前shell或脚本，可返回状态码。',
+                examples: [
+                    { command: 'exit', output: '退出，默认状态码0' },
+                    { command: 'exit 0', output: '正常退出' },
+                    { command: 'exit 1', output: '异常退出' },
+                    { command: 'if [ ! -f file ]; then exit 1; fi', output: '条件退出' }
+                ],
+                quiz: {
+                    question: '表示成功的退出码是？',
+                    options: ['0', '1', '2', '-1'],
+                    answer: 0,
+                    explanation: '退出码0表示成功，非0表示失败'
+                }
+            },
+            {
+                name: 'set',
+                description: '设置选项',
+                category: 'script',
+                usage: 'set [选项]',
+                details: '设置shell选项，常用脚本调试。',
+                examples: [
+                    { command: 'set -e', output: '出错立即退出' },
+                    { command: 'set -x', output: '显示执行命令' },
+                    { command: 'set -ex', output: '组合选项' },
+                    { command: 'set +x', output: '关闭调试' }
+                ],
+                quiz: {
+                    question: '开启命令调试使用哪个选项？',
+                    options: ['-x', '-v', '-e', '-d'],
+                    answer: 0,
+                    explanation: '-x 参数显示执行的每个命令'
+                }
+            },
+            {
+                name: 'source',
+                description: '执行脚本',
+                category: 'script',
+                usage: 'source 文件',
+                details: '在当前shell环境中执行脚本，使变量生效。',
+                examples: [
+                    { command: 'source ~/.bashrc', output: '加载bash配置' },
+                    { command: '. ~/.bashrc', output: 'source的简写' },
+                    { command: 'source script.sh', output: '在当前shell执行' }
+                ],
+                quiz: {
+                    question: 'source和bash执行脚本的区别？',
+                    options: ['source在当前shell执行', 'bash在子shell执行', '两者都对', '没有区别'],
+                    answer: 2,
+                    explanation: 'source在当前shell执行，变量会生效；bash在子shell执行'
+                }
+            },
+            {
+                name: 'export',
+                description: '环境变量',
+                category: 'script',
+                usage: 'export 变量=值',
+                details: '设置环境变量，使其对子进程可见。',
+                examples: [
+                    { command: 'export PATH=$PATH:/new/path', output: '添加路径' },
+                    { command: 'export LANG=en_US.UTF-8', output: '设置语言' },
+                    { command: 'export -p', output: '列出所有环境变量' }
+                ],
+                quiz: {
+                    question: '查看所有环境变量使用哪个命令？',
+                    options: ['export -p', 'printenv', 'env', '以上都可以'],
+                    answer: 3,
+                    explanation: '三种命令都可以查看环境变量'
+                }
+            },
+            {
+                name: 'vim',
+                description: 'Vim编辑器',
+                category: 'tools',
+                usage: 'vim [选项] 文件',
+                details: '强大的文本编辑器，是Linux运维必备工具。支持多种模式：普通模式、插入模式、可视模式等。',
+                examples: [
+                    { command: 'vim file.txt', output: '打开或创建文件' },
+                    { command: 'vim -R file.txt', output: '只读模式打开' },
+                    { command: 'vim +10 file.txt', output: '打开文件并定位到第10行' },
+                    { command: 'vimdiff file1.txt file2.txt', output: '对比两个文件' }
+                ],
+                quiz: {
+                    question: 'Vim中如何进入插入模式？',
+                    options: ['按i键', '按Enter键', '按Esc键', '按:键'],
+                    answer: 0,
+                    explanation: '按i键进入插入模式(insert mode)'
+                }
+            },
+            {
+                name: 'vim-insert',
+                description: 'Vim插入模式',
+                category: 'tools',
+                usage: '进入插入模式后编辑文本',
+                details: '插入模式用于编辑文本，按Esc返回普通模式。',
+                examples: [
+                    { command: 'i', output: '在光标前插入' },
+                    { command: 'I', output: '在行首插入' },
+                    { command: 'a', output: '在光标后插入' },
+                    { command: 'A', output: '在行尾插入' },
+                    { command: 'o', output: '在下方新建一行' },
+                    { command: 'O', output: '在上方新建一行' }
+                ],
+                quiz: {
+                    question: '在当前行下方新建一行使用哪个命令？',
+                    options: ['o', 'O', 'a', 'A'],
+                    answer: 0,
+                    explanation: '小写o在当前行下方新建一行'
+                }
+            },
+            {
+                name: 'vim-normal',
+                description: 'Vim普通模式',
+                category: 'tools',
+                usage: '普通模式下执行命令',
+                details: '普通模式是Vim的默认模式，用于移动光标和执行编辑命令。',
+                examples: [
+                    { command: 'h/j/k/l', output: '上下左右移动' },
+                    { command: 'w/b', output: '按单词前后移动' },
+                    { command: '0/$', output: '移动到行首/行尾' },
+                    { command: 'gg/G', output: '移动到文件开头/结尾' },
+                    { command: 'dd', output: '删除整行' },
+                    { command: 'yy', output: '复制整行' },
+                    { command: 'p', output: '粘贴' },
+                    { command: '/pattern', output: '搜索' }
+                ],
+                quiz: {
+                    question: '删除当前行使用哪个命令？',
+                    options: ['dd', 'd', 'delete', 'x'],
+                    answer: 0,
+                    explanation: 'dd命令删除当前行(delete line)'
+                }
+            },
+            {
+                name: 'vim-command',
+                description: 'Vim命令模式',
+                category: 'tools',
+                usage: '按:进入命令模式',
+                details: '命令模式用于执行文件操作和设置。',
+                examples: [
+                    { command: ':w', output: '保存文件' },
+                    { command: ':q', output: '退出Vim' },
+                    { command: ':wq', output: '保存并退出' },
+                    { command: ':q!', output: '强制退出不保存' },
+                    { command: ':set nu', output: '显示行号' },
+                    { command: ':set nonu', output: '隐藏行号' },
+                    { command: ':w newfile.txt', output: '另存为新文件' },
+                    { command: ':1,5d', output: '删除第1-5行' }
+                ],
+                quiz: {
+                    question: '保存并退出Vim使用哪个命令？',
+                    options: [':wq', ':exit', ':save', ':quit'],
+                    answer: 0,
+                    explanation: ':wq 保存(write)并退出(quit)'
+                }
+            },
+            {
+                name: 'vim-visual',
+                description: 'Vim可视模式',
+                category: 'tools',
+                usage: '按v进入可视模式',
+                details: '可视模式用于选择文本块进行操作。',
+                examples: [
+                    { command: 'v', output: '字符选择模式' },
+                    { command: 'V', output: '行选择模式' },
+                    { command: 'Ctrl+v', output: '块选择模式' },
+                    { command: 'd', output: '删除选中内容' },
+                    { command: 'y', output: '复制选中内容' },
+                    { command: 'c', output: '删除选中并进入插入模式' }
+                ],
+                quiz: {
+                    question: '进入行选择模式使用哪个命令？',
+                    options: ['V', 'v', 'Ctrl+v', 'Shift+v'],
+                    answer: 0,
+                    explanation: '大写V进入行选择模式(Visual Line)'
+                }
+            },
+            {
+                name: 'man',
+                description: '帮助手册',
+                category: 'tools',
+                usage: 'man [选项] 命令',
+                details: '查看命令的帮助文档，是学习Linux的必备工具。',
+                examples: [
+                    { command: 'man ls', output: '查看ls命令帮助' },
+                    { command: 'man 5 passwd', output: '查看配置文件格式' },
+                    { command: 'man -k keyword', output: '搜索相关命令' },
+                    { command: 'man --help', output: '查看man命令本身的帮助' }
+                ],
+                quiz: {
+                    question: '查看命令帮助使用哪个命令？',
+                    options: ['help', 'man', 'info', '--help'],
+                    answer: 1,
+                    explanation: 'man 命令用于查看命令的帮助手册'
+                }
+            },
+            {
+                name: 'echo',
+                description: '输出文本',
+                category: 'tools',
+                usage: 'echo [选项] 文本',
+                details: '输出文本到标准输出，是最常用的命令之一。',
+                examples: [
+                    { command: 'echo "Hello World"', output: '输出字符串' },
+                    { command: 'echo $PATH', output: '输出环境变量' },
+                    { command: 'echo -e "Line1\\nLine2"', output: '输出多行' },
+                    { command: 'echo -n "No newline"', output: '不换行输出' }
+                ],
+                quiz: {
+                    question: '输出环境变量PATH使用哪个命令？',
+                    options: ['echo $PATH', 'printenv PATH', 'env | grep PATH', '以上都可以'],
+                    answer: 3,
+                    explanation: '三种方式都可以查看环境变量'
+                }
+            },
+            {
+                name: 'clear',
+                description: '清屏',
+                category: 'tools',
+                usage: 'clear',
+                details: '清除终端屏幕内容，使界面更整洁。',
+                examples: [
+                    { command: 'clear', output: '清除屏幕' },
+                    { command: 'Ctrl+L', output: '快捷键清屏' }
+                ],
+                quiz: {
+                    question: '清屏快捷键是什么？',
+                    options: ['Ctrl+C', 'Ctrl+L', 'Ctrl+D', 'Ctrl+X'],
+                    answer: 1,
+                    explanation: 'Ctrl+L 是清屏快捷键'
+                }
+            },
+            {
+                name: 'touch',
+                description: '创建文件',
+                category: 'files',
+                usage: 'touch [选项] 文件',
+                details: '创建空文件或更新文件时间戳。',
+                examples: [
+                    { command: 'touch file.txt', output: '创建空文件' },
+                    { command: 'touch file1.txt file2.txt', output: '同时创建多个文件' },
+                    { command: 'touch -t 202401010000 file.txt', output: '设置文件时间戳' }
+                ],
+                quiz: {
+                    question: '创建空文件使用哪个命令？',
+                    options: ['touch', 'cat >', 'echo "" >', '以上都可以'],
+                    answer: 3,
+                    explanation: '三种方式都可以创建空文件'
+                }
+            },
+            {
+                name: 'diff',
+                description: '比较文件',
+                category: 'files',
+                usage: 'diff [选项] 文件1 文件2',
+                details: '比较两个文件的差异。',
+                examples: [
+                    { command: 'diff file1.txt file2.txt', output: '比较两个文件' },
+                    { command: 'diff -u file1.txt file2.txt', output: '统一格式输出' },
+                    { command: 'diff -r dir1 dir2', output: '递归比较目录' },
+                    { command: 'diff --help', output: '查看帮助' }
+                ],
+                quiz: {
+                    question: '以统一格式比较文件使用哪个参数？',
+                    options: ['-u', '-c', '-d', '--unified'],
+                    answer: 0,
+                    explanation: '-u 参数生成统一格式的diff输出'
+                }
+            },
+            {
+                name: 'rsync',
+                description: '同步文件',
+                category: 'network',
+                usage: 'rsync [选项] 源 目标',
+                details: '高效的文件同步工具，支持增量同步。',
+                examples: [
+                    { command: 'rsync -av source/ dest/', output: '同步目录' },
+                    { command: 'rsync -avz user@host:/path/ /local/path/', output: '远程同步' },
+                    { command: 'rsync -av --delete source/ dest/', output: '同步并删除多余文件' },
+                    { command: 'rsync -avP source/ dest/', output: '显示进度' }
+                ],
+                quiz: {
+                    question: 'rsync常用参数组合是？',
+                    options: ['-av', '-copy', '-sync', '-transfer'],
+                    answer: 0,
+                    explanation: '-a 归档模式，-v 详细输出'
+                }
+            },
+            {
+                name: 'tmux',
+                description: '终端复用',
+                category: 'tools',
+                usage: 'tmux [命令]',
+                details: '终端复用器，允许在单个窗口中管理多个终端会话。',
+                examples: [
+                    { command: 'tmux', output: '启动tmux' },
+                    { command: 'tmux new -s session', output: '创建命名会话' },
+                    { command: 'tmux attach -t session', output: '连接会话' },
+                    { command: 'Ctrl+b %', output: '垂直分割窗口' }
+                ],
+                quiz: {
+                    question: 'tmux的默认前缀键是什么？',
+                    options: ['Ctrl+a', 'Ctrl+b', 'Ctrl+t', 'Ctrl+x'],
+                    answer: 1,
+                    explanation: 'tmux默认前缀键是Ctrl+b'
+                }
+            },
+            {
+                name: 'nohup',
+                description: '后台运行',
+                category: 'script',
+                usage: 'nohup 命令 &',
+                details: '使命令在后台运行，即使退出终端也不受影响。',
+                examples: [
+                    { command: 'nohup ./script.sh &', output: '后台运行脚本' },
+                    { command: 'nohup python app.py > output.log &', output: '重定向输出' },
+                    { command: 'nohup ./server &>/dev/null &', output: '忽略输出' }
+                ],
+                quiz: {
+                    question: '让命令在后台运行的符号是？',
+                    options: ['&', '&&', '||', ';'],
+                    answer: 0,
+                    explanation: '& 符号将命令放入后台运行'
+                }
+            },
+            {
+                name: 'id',
+                description: '用户信息',
+                category: 'system',
+                usage: 'id [选项] [用户名]',
+                details: '显示用户和组的ID信息。',
+                examples: [
+                    { command: 'id', output: '显示当前用户信息' },
+                    { command: 'id username', output: '显示指定用户信息' },
+                    { command: 'id -u', output: '只显示UID' },
+                    { command: 'id -g', output: '只显示GID' }
+                ],
+                quiz: {
+                    question: '只显示用户ID使用哪个参数？',
+                    options: ['-u', '-uid', '-user', '--id'],
+                    answer: 0,
+                    explanation: '-u 参数只显示用户ID(UID)'
+                }
+            },
+            {
+                name: 'uptime',
+                description: '运行时间',
+                category: 'system',
+                usage: 'uptime',
+                details: '显示系统运行时间和平均负载。',
+                examples: [
+                    { command: 'uptime', output: '显示运行时间' },
+                    { command: 'uptime -p', output: '友好格式显示' },
+                    { command: 'uptime -s', output: '显示启动时间' }
+                ],
+                quiz: {
+                    question: '显示系统启动时间使用哪个参数？',
+                    options: ['-s', '-start', '-boot', '-b'],
+                    answer: 0,
+                    explanation: '-s 参数显示系统启动时间(start time)'
+                }
+            },
+            {
+                name: 'cal',
+                description: '日历',
+                category: 'tools',
+                usage: 'cal [选项] [月份] [年份]',
+                details: '显示日历。',
+                examples: [
+                    { command: 'cal', output: '显示当月日历' },
+                    { command: 'cal 2024', output: '显示全年日历' },
+                    { command: 'cal 12 2024', output: '显示指定月份' },
+                    { command: 'cal -3', output: '显示前后三个月' }
+                ],
+                quiz: {
+                    question: '显示全年日历使用哪个命令？',
+                    options: ['cal 年份', 'cal -y', 'cal --year', '以上都可以'],
+                    answer: 3,
+                    explanation: '多种方式都可以显示全年日历'
+                }
+            }
+        ];
+
+        const searchBar = document.getElementById('searchBar');
+        const categoryTabs = document.getElementById('categoryTabs');
+        const commandGrid = document.getElementById('commandGrid');
+        const commandModal = document.getElementById('commandModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const totalCommands = document.getElementById('totalCommands');
+        const favCount = document.getElementById('favCount');
+        const quizScore = document.getElementById('quizScore');
+        
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        let score = parseInt(localStorage.getItem('quizScore') || '0');
+        
+        function renderCommands(filter = '', category = 'all') {
+            const filtered = commands.filter(cmd => {
+                const matchesSearch = cmd.name.toLowerCase().includes(filter.toLowerCase()) ||
+                                    cmd.description.toLowerCase().includes(filter.toLowerCase());
+                const matchesCategory = category === 'all' || cmd.category === category;
+                return matchesSearch && matchesCategory;
+            });
+            
+            commandGrid.innerHTML = '';
+            filtered.forEach(cmd => {
+                const card = document.createElement('div');
+                card.className = 'command-card';
+                card.innerHTML = `
+                    <div class="name">${cmd.name}</div>
+                    <div class="desc">${cmd.description}</div>
+                    <div class="tags">
+                        <span class="tag">${getCategoryName(cmd.category)}</span>
+                    </div>
+                `;
+                card.onclick = () => openModal(cmd);
+                commandGrid.appendChild(card);
+            });
+            
+            totalCommands.textContent = commands.length;
+            favCount.textContent = favorites.length;
+            quizScore.textContent = score;
+        }
+        
+        function getCategoryName(category) {
+            const names = {
+                'files': '文件操作',
+                'system': '系统管理',
+                'network': '网络管理',
+                'process': '进程管理',
+                'package': '软件包管理',
+                'script': '脚本编程',
+                'tools': '工具命令',
+                'compress': '压缩工具'
+            };
+            return names[category] || category;
+        }
+        
+        function openModal(cmd) {
+            modalTitle.textContent = cmd.name;
+            favoriteBtn.textContent = favorites.includes(cmd.name) ? '⭐' : '☆';
+            favoriteBtn.dataset.command = cmd.name;
+            
+            let html = `
+                <div class="section">
+                    <div class="section-title">描述</div>
+                    <div class="description">${cmd.details}</div>
+                </div>
+                <div class="section">
+                    <div class="section-title">用法</div>
+                    <div class="usage">${cmd.usage}</div>
+                </div>
+                <div class="section">
+                    <div class="section-title">示例</div>
+            `;
+            
+            cmd.examples.forEach(ex => {
+                html += `
+                    <div class="example">
+                        <span class="prompt">$</span> <span class="command">${ex.command}</span>
+                        <div class="output">${ex.output}</div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                </div>
+                <div class="quiz-section">
+                    <div class="section-title">小测验</div>
+                    <div class="quiz-question">${cmd.quiz.question}</div>
+                    <div class="quiz-options" id="quizOptions">
+            `;
+            
+            cmd.quiz.options.forEach((opt, idx) => {
+                html += `<div class="quiz-option" data-index="${idx}">${opt}</div>`;
+            });
+            
+            html += `
+                    </div>
+                    <div class="quiz-feedback" id="quizFeedback"></div>
+                </div>
+            `;
+            
+            modalBody.innerHTML = html;
+            commandModal.classList.add('active');
+            
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.onclick = () => checkAnswer(cmd, parseInt(opt.dataset.index));
+            });
+        }
+        
+        function checkAnswer(cmd, selectedIndex) {
+            const options = document.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('quizFeedback');
+            
+            options.forEach((opt, idx) => {
+                opt.style.pointerEvents = 'none';
+                if (idx === cmd.quiz.answer) {
+                    opt.classList.add('correct');
+                } else if (idx === selectedIndex && idx !== cmd.quiz.answer) {
+                    opt.classList.add('wrong');
+                }
+            });
+            
+            if (selectedIndex === cmd.quiz.answer) {
+                feedback.textContent = `✅ 正确！${cmd.quiz.explanation}`;
+                feedback.className = 'quiz-feedback correct';
+                score += 10;
+                localStorage.setItem('quizScore', score.toString());
+                quizScore.textContent = score;
+            } else {
+                feedback.textContent = `❌ 错误！正确答案是: ${cmd.quiz.options[cmd.quiz.answer]}\n${cmd.quiz.explanation}`;
+                feedback.className = 'quiz-feedback wrong';
+            }
+        }
+        
+        function closeModal() {
+            commandModal.classList.remove('active');
+        }
+        
+        function toggleFavorite() {
+            const cmdName = favoriteBtn.dataset.command;
+            if (favorites.includes(cmdName)) {
+                favorites = favorites.filter(f => f !== cmdName);
+                favoriteBtn.textContent = '☆';
+            } else {
+                favorites.push(cmdName);
+                favoriteBtn.textContent = '⭐';
+            }
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            favCount.textContent = favorites.length;
+        }
+        
+        searchBar.addEventListener('input', (e) => {
+            const activeTab = document.querySelector('.tab.active');
+            renderCommands(e.target.value, activeTab.dataset.category);
+        });
+        
+        categoryTabs.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab')) {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                renderCommands(searchBar.value, e.target.dataset.category);
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        renderCommands();
+    </script>
+</body>
+</html>
